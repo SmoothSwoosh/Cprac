@@ -47,7 +47,7 @@ public:
     /**
      * @brief Assignment operator
      * 
-     * @param rhs
+     * @param rhs number to copys
      * @return Rational_number& 
      */
     Rational_number& operator=(const Rational_number& rhs) {
@@ -59,7 +59,7 @@ public:
     /**
      * @brief Move assignment operator
      * 
-     * @param rhs
+     * @param rhs number to copy
      * @return Rational_number& 
      */
     Rational_number& operator=(Rational_number&& rhs) noexcept {
@@ -82,7 +82,10 @@ public:
     Rational_number(const char* numerator, const char* denominator = "1") {
         T parsed_numerator = 0;
         bool is_negative = false;
-        for (int i = 0; numerator[i] != '\0'; ++i) {
+        for (int i = 0; numerator[i] != '\0' && numerator[i] != '/'; ++i) {
+            if (numerator[i] == '<' || numerator[i] == ' ' || numerator[i] == '>') {
+                continue;
+            } 
             if (numerator[i] == '-') {
                 is_negative = true;
             } else {
@@ -100,6 +103,9 @@ public:
 
         T parsed_denominator = 0;
         for (int i = 0; denominator[i] != '\0'; ++i) {
+            if (denominator[i] == '>' || denominator[i] == ' ') {
+                continue;
+            }
             if (denominator[i] < '0' || denominator[i] > '9') {
                 throw RationalNumberException("Not a rational number!");
             }
@@ -118,7 +124,7 @@ public:
     /**
      * @brief += operator
      * 
-     * @param rhs
+     * @param rhs number with whom sum
      * @return Rational_number& 
      */
     Rational_number& operator+=(const Rational_number& rhs) {
@@ -131,7 +137,7 @@ public:
     /**
      * @brief -= operator
      * 
-     * @param rhs
+     * @param rhs number with whom minus
      * @return Rational_number& 
      */
     Rational_number& operator-=(const Rational_number& rhs) {
@@ -141,7 +147,7 @@ public:
     /**
      * @brief *= operator
      * 
-     * @param rhs
+     * @param rhs number by whom multiply
      * @return Rational_number& 
      */
     Rational_number& operator*=(const Rational_number& rhs) {
@@ -153,7 +159,7 @@ public:
     /**
      * @brief /= operator
      * 
-     * @param rhs
+     * @param rhs number by whom divide
      * @return Rational_number& 
      */
     Rational_number& operator/=(const Rational_number& rhs) {
@@ -168,8 +174,8 @@ public:
     /**
      * @brief + operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left number
+     * @param rhs right number
      * @return Rational_number
      */
     friend Rational_number operator+(Rational_number lhs, const Rational_number& rhs) {
@@ -179,8 +185,8 @@ public:
     /**
      * @brief - operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left number
+     * @param rhs right number
      * @return Rational_number
      */
     friend Rational_number operator-(Rational_number lhs, const Rational_number& rhs) {
@@ -190,8 +196,8 @@ public:
     /**
      * @brief * operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left number
+     * @param rhs right number
      * @return Rational_number
      */
     friend Rational_number operator*(Rational_number lhs, const Rational_number& rhs) {
@@ -201,8 +207,8 @@ public:
     /**
      * @brief / operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left number
+     * @param rhs right number
      * @return Rational_number
      */
     friend Rational_number operator/(Rational_number lhs, const Rational_number& rhs) {
@@ -212,8 +218,8 @@ public:
     /**
      * @brief < operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left number
+     * @param rhs right number
      * @return true
      * @return false
      */
@@ -225,8 +231,8 @@ public:
     /**
      * @brief <= operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left number
+     * @param rhs right number
      * @return true
      * @return false
      */
@@ -237,8 +243,8 @@ public:
     /**
      * @brief > operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left number
+     * @param rhs right number
      * @return true
      * @return false
      */
@@ -249,8 +255,8 @@ public:
     /**
      * @brief >= operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left number
+     * @param rhs right number
      * @return true
      * @return false
      */
@@ -261,8 +267,8 @@ public:
     /**
      * @brief == operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left number
+     * @param rhs right number
      * @return true
      * @return false
      */
@@ -273,8 +279,8 @@ public:
     /**
      * @brief != operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left number
+     * @param rhs right number
      * @return true
      * @return false
      */
@@ -361,8 +367,8 @@ public:
     /**
      * @brief Overload of ostream
      * 
-     * @param os 
-     * @param rhs
+     * @param os ostream
+     * @param rhs number to output
      * @return std::ostream& 
      */
     friend std::ostream& operator<<(std::ostream& os, const Rational_number& rhs) {

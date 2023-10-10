@@ -7,8 +7,9 @@
 #include <sstream>
 #include <fstream>
 #include <tuple>
+#include "iostream"
 #include "../Exceptions/Exceptions.h"
-
+#include "../Rational_number/Rational_number.h"
 
 using Slice_coords = std::tuple<int, int, int, int>;
 using Cell = std::tuple<int, int>;
@@ -49,7 +50,7 @@ public:
     /**
      * @brief Get coords
      * 
-     * @return Slice_coords
+     * @return Slice_coords slicing coords
      */
     Slice_coords get_coords() const {
         auto& [r1, c1] = _left_corner;
@@ -146,8 +147,8 @@ public:
     /**
      * @brief Constructor from Matrix_row_coord
      * 
-     * @param matrix
-     * @param matrix_row
+     * @param matrix proxy matrix
+     * @param matrix_row matrix_row_coord
      */
     Matrix_proxy(Matrix<T>* matrix, Matrix_row_coord matrix_row) :
                  _matrix(matrix), _proxy_type(Proxy_type::ROW) {
@@ -160,8 +161,8 @@ public:
     /**
      * @brief Constructor from Matrix_column_coord
      * 
-     * @param matrix
-     * @param matrix_column
+     * @param matrix proxy matrix
+     * @param matrix_column matrix_column_coord
      */
     Matrix_proxy(Matrix<T>* matrix, Matrix_column_coord matrix_column) :
                  _matrix(matrix), _proxy_type(Proxy_type::COLUMN) {
@@ -174,8 +175,8 @@ public:
     /**
      * @brief Constructor from Matrix_coords
      * 
-     * @param matrix
-     * @param coords
+     * @param matrix proxy matrix
+     * @param coords Matrix_coords coords
      */
     Matrix_proxy(Matrix<T>* matrix, Matrix_coords coords) :
                  _matrix(matrix), _proxy_type(Proxy_type::FULL) {
@@ -200,8 +201,8 @@ public:
     /**
      * @brief Access operator
      * 
-     * @param i
-     * @param j 
+     * @param i first index
+     * @param j second index
      * @return T& 
      */
     T& operator()(int i, int j) {
@@ -212,7 +213,7 @@ public:
         if (!(r1 + i > r2 || c1 + j > c2)) {
             return _matrix->operator()(r1 + i, c1 + j);
         } else {
-            throw MatrixException("Indices for slice are wrong!");
+            throw MatrixException("Indices of slice are wrong!");
         }
     }
 
@@ -232,6 +233,9 @@ public:
  */
 template<typename T>
 class Matrix {
+    /**
+     * @brief Data type std::map<Cell, T>
+     */
     using Data = std::map<Cell, T>;
     /**
      * @brief data of matrix
@@ -277,15 +281,21 @@ public:
     /**
      * @brief Constructor
      * 
-     * @param n 
-     * @param n 
-     * @param value 
-     * @param eps
+     * @param n first dimention
+     * @param m second dimention
+     * @param value value
+     * @param eps epsilon
+     * @param identity if needs identity matrix
      */
-    Matrix(int n = 0, int m = 0, T value = 0, double eps = 0.0001) {
+    Matrix(int n = 0, int m = 0, T value = 0, double eps = 0.0001, bool identity = false) {
         _dimentions = {n, m};
         _eps = eps;
-        if (!(value < eps && value > -eps)) {
+
+        if (identity) {
+            for (int i = 0; i < n; ++i) {
+                _data[{i, i}] = 1;
+            }
+        } else if (!(value < eps && value > -eps)) {
             for (int i = 0; i < n; ++i) {
                 for (int j = 0; j < m; ++j) {
                     _data.insert({{i, j}, value});
@@ -297,10 +307,10 @@ public:
     /**
      * @brief Constructor from file
      * 
-     * @param filename
+     * @param filename filename
      */
     Matrix(const std::string& filename) {
-        std::ifstream in(filename);
+        std::ifstream in;
         in.open(filename);
 
         std::string line;
@@ -323,7 +333,7 @@ public:
                     throw FileException("Wrong input - expected rational!");
                 }
                 int n, m;
-                if (!(ss >> n >> m)) { 
+                if (!(ss >> n >> m)) {
                     throw FileException("Wrong input - expected dimentions!");
                 }
                 if (ss >> word && word[0] != '#') {
@@ -341,7 +351,7 @@ public:
                     num += ' ';
                     num += word;
                 }
-                T value{num};
+                T value{num.c_str()};
 
                 auto [n, m] = _dimentions;
                 if (i < 0 || i >= n || j < 0 || j >= m) {
@@ -362,14 +372,14 @@ public:
     /**
      * @brief Constructor from dimentions
      * 
-     * @param dimentions 
+     * @param dimentions matrix dimentions
      */
     explicit Matrix(const Dimensions& dimentions) : _dimentions(dimentions) {};
 
     /**
      * @brief Copy constructor
      * 
-     * @param other 
+     * @param other matrix to copy
      */
     Matrix(const Matrix& other) {
         _dimentions = other._dimentions;
@@ -379,7 +389,7 @@ public:
     /**
      * @brief Assignment operator
      * 
-     * @param other 
+     * @param other matrix to copy
      * @return Matrix& 
      */
     Matrix& operator=(const Matrix& rhs) {
@@ -391,7 +401,7 @@ public:
     /**
      * @brief Move constructor
      * 
-     * @param other 
+     * @param other matrix to move
      */
     Matrix(Matrix&& other) noexcept {
         _dimentions = std::move(other._dimentions);
@@ -401,7 +411,7 @@ public:
     /**
      * @brief Move assignment operator
      * 
-     * @param other 
+     * @param other matrix to move
      * @return Matrix& 
      */
     Matrix& operator=(Matrix&& rhs) noexcept {
@@ -413,7 +423,7 @@ public:
     /**
      * @brief += operator
      * 
-     * @param rhs 
+     * @param rhs matrix with whom sum
      * @return Matrix&
      */
     Matrix& operator+=(const Matrix& rhs) {
@@ -430,7 +440,7 @@ public:
     /**
      * @brief -= operator
      * 
-     * @param rhs 
+     * @param rhs matrix with whom minus
      * @return Matrix&
      */
     Matrix& operator-=(const Matrix& rhs) {
@@ -442,7 +452,7 @@ public:
     /**
      * @brief *= operator
      * 
-     * @param rhs 
+     * @param rhs matrix with whom multiply
      * @return Matrix& 
      */
     Matrix& operator*=(const Matrix& rhs) {
@@ -486,8 +496,8 @@ public:
     /**
      * @brief + operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left matrix
+     * @param rhs right matrix
      * @return Matrix
      */
     friend Matrix operator+(Matrix lhs, const Matrix& rhs) {
@@ -497,8 +507,8 @@ public:
     /**
      * @brief - operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left matrix
+     * @param rhs right matrix
      * @return Matrix
      */
     friend Matrix operator-(Matrix lhs, const Matrix& rhs) {
@@ -508,8 +518,8 @@ public:
     /**
      * @brief * operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left matrix
+     * @param rhs right matrix
      * @return Matrix
      */
     friend Matrix operator*(Matrix lhs, const Matrix& rhs) {
@@ -519,8 +529,8 @@ public:
     /**
      * @brief Matrix * value operator
      * 
-     * @param lhs
-     * @param value
+     * @param lhs left matrix
+     * @param value value of type T
      * @return Matrix
      */
     friend Matrix operator*(const Matrix& lhs, T value) {
@@ -532,8 +542,8 @@ public:
     /**
      * @brief value * Matrix operator
      * 
-     * @param value
-     * @param rhs
+     * @param value value of type T
+     * @param rhs right matrix
      * @return Matrix
      */
     friend Matrix operator*(T value, const Matrix& lhs) {
@@ -545,7 +555,7 @@ public:
     /**
      * @brief *= value operator
      * 
-     * @param value
+     * @param value value of type T
      * @return Matrix&
      */
     Matrix& operator*=(T value) {
@@ -558,7 +568,6 @@ public:
 
     /**
      * @brief transpose operator
-     * 
      * 
      * @return Matrix
      */
@@ -574,8 +583,8 @@ public:
     /**
      * @brief == operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left matrix
+     * @param rhs right matrix
      * @return true 
      * @return false 
      */
@@ -586,8 +595,8 @@ public:
     /**
      * @brief != operator
      * 
-     * @param lhs
-     * @param rhs
+     * @param lhs left matrix
+     * @param rhs right matrix
      * @return true 
      * @return false 
      */
@@ -616,8 +625,8 @@ public:
     /**
      * @brief Access operator
      * 
-     * @param i
-     * @param j
+     * @param i first index
+     * @param j second index
      * @return T& 
      */
     T& operator()(int i, int j) {
@@ -631,13 +640,13 @@ public:
     /**
      * @brief Slice operator
      * 
-     * @param coords 
+     * @param coords coords of slice
      * @return Matrix_proxy<T> 
      */
     Matrix_proxy<T> operator[](const Matrix_coords& coords) {
         auto [r1, c1, r2, c2] = coords.get_coords();
         auto [n, m] = _dimentions;
-        if (c1 < 0 || c2 < 0 || c1 >= n || c2 >= m) {
+        if (c1 >= n || c2 >= m) {
             throw MatrixException("Indices of slice are wrong!");
         }
         return Matrix_proxy<T>(this, coords);
@@ -646,7 +655,7 @@ public:
     /**
      * @brief Add proxy
      * 
-     * @param proxy 
+     * @param proxy proxy
      */
     void add_proxy(Matrix_proxy<T>* proxy) {
         _proxies.insert(proxy);
@@ -655,7 +664,7 @@ public:
     /**
      * @brief Remove proxy
      * 
-     * @param proxy 
+     * @param proxy proxy
      */
     void remove_proxy(Matrix_proxy<T>* proxy) {
         _proxies.erase(proxy);
@@ -664,8 +673,8 @@ public:
     /**
      * @brief Overload of ostream
      * 
-     * @param os 
-     * @param rhs 
+     * @param os ostream
+     * @param rhs matrix to output
      * @return std::ostream& 
      */
     friend std::ostream& operator<<(std::ostream& os, const Matrix& rhs) {
