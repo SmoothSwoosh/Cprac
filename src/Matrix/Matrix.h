@@ -257,7 +257,7 @@ class Matrix {
     void delete_zeros() {
         std::set<Cell> zeros;
         for (const auto& [key, value] : _data) {
-            if (value < _eps && value > -_eps) {
+            if (double(value) < _eps && double(value) > -_eps) {
                 zeros.insert(key);
             }
         }
@@ -292,10 +292,11 @@ public:
         _eps = eps;
 
         if (identity) {
+            if (value == 0) value = 1;
             for (int i = 0; i < n; ++i) {
-                _data[{i, i}] = 1;
+                _data[{i, i}] = value;
             }
-        } else if (!(value < eps && value > -eps)) {
+        } else if (!(double(value) < eps && double(value) > -eps)) {
             for (int i = 0; i < n; ++i) {
                 for (int j = 0; j < m; ++j) {
                     _data.insert({{i, j}, value});
@@ -312,6 +313,10 @@ public:
     Matrix(const std::string& filename) {
         std::ifstream in;
         in.open(filename);
+
+        if (!in.is_open()) {
+            throw FileException("Can not open file!");
+        }
 
         std::string line;
         bool got_dimentions = false;
@@ -358,7 +363,7 @@ public:
                     throw FileException("Wrong input - indices are out of range!");
                 }
 
-                if (value < _eps && value > -_eps) {
+                if (double(value) < _eps && double(value) > -_eps) {
                     _data.erase({i, j});
                 } else {
                     _data[{i, j}] = value;
@@ -501,7 +506,9 @@ public:
      * @return Matrix
      */
     friend Matrix operator+(Matrix lhs, const Matrix& rhs) {
-        return lhs += rhs;
+        lhs += rhs;
+        lhs.delete_zeros();
+        return lhs;
     }
 
     /**
@@ -512,7 +519,9 @@ public:
      * @return Matrix
      */
     friend Matrix operator-(Matrix lhs, const Matrix& rhs) {
-        return lhs -= rhs;
+        lhs -= rhs;
+        lhs.delete_zeros();
+        return lhs;
     }
 
     /**
@@ -523,7 +532,9 @@ public:
      * @return Matrix
      */
     friend Matrix operator*(Matrix lhs, const Matrix& rhs) {
-        return lhs *= rhs;
+        lhs *= rhs;
+        lhs.delete_zeros();
+        return lhs;
     }
 
     /**
@@ -536,6 +547,7 @@ public:
     friend Matrix operator*(const Matrix& lhs, T value) {
         Matrix copy{lhs};
         copy *= value;
+        copy.delete_zeros();
         return copy;
     }
 
@@ -549,6 +561,7 @@ public:
     friend Matrix operator*(T value, const Matrix& lhs) {
         Matrix copy{lhs};
         copy *= value;
+        copy.delete_zeros();
         return copy;
     }
 
@@ -572,7 +585,9 @@ public:
      * @return Matrix
      */
     Matrix operator~() const {
-        Matrix transpose{_dimentions};
+        auto [n, m] = _dimentions;
+        Dimensions d = {m, n};
+        Matrix transpose{d};
         for (const auto& [key, value] : _data) {
             auto [r1, c1] = key;
             transpose._data[{c1, r1}] = value;

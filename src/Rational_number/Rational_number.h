@@ -76,10 +76,10 @@ public:
                                                       _denominator(std::move(other._denominator)) {}
 
     /**
-     * @brief Constructor from const char *
+     * @brief Constructor from two const char *
      * 
      */
-    Rational_number(const char* numerator, const char* denominator = "1") {
+    Rational_number(const char* numerator, const char* denominator) {
         T parsed_numerator = 0;
         bool is_negative = false;
         for (int i = 0; numerator[i] != '\0' && numerator[i] != '/'; ++i) {
@@ -115,6 +115,63 @@ public:
 
         if (parsed_denominator == 0) {
             throw RationalNumberException("Zero denominator!");
+        }
+
+        _numerator = parsed_numerator;
+        _denominator = parsed_denominator;
+    }
+
+    /**
+     * @brief Constructor from one const char *
+     * 
+     */
+    Rational_number(const char* whole_number) {
+        T parsed_numerator = 0;
+        bool is_negative = false;
+        bool has_denominator = false;
+        int i = 0;
+        for (i = 0; whole_number[i] != '\0'; ++i) {
+            if (whole_number[i] == '<' || whole_number[i] == ' ' || whole_number[i] == '>') {
+                continue;
+            }
+            if (whole_number[i] == '/') {
+                has_denominator = true;
+                ++i;
+                break;
+            }
+            if (whole_number[i] == '-') {
+                is_negative = true;
+            } else {
+                if (whole_number[i] < '0' || whole_number[i] > '9') {
+                    throw RationalNumberException("Not a rational number!");
+                }
+                T digit = whole_number[i] - '0';
+                parsed_numerator = parsed_numerator * 10 + digit;
+            }
+        }
+
+        if (is_negative) {
+            parsed_numerator *= -1;
+        }
+
+        T parsed_denominator = 0;
+        if (has_denominator) {
+            for (; whole_number[i] != '\0'; ++i) {
+                if (whole_number[i] == '>' || whole_number[i] == ' ') {
+                    continue;
+                }
+                if (whole_number[i] < '0' || whole_number[i] > '9') {
+                    throw RationalNumberException("Not a rational number!");
+                }
+                T digit = whole_number[i] - '0';
+                parsed_denominator = parsed_denominator * 10 + digit;
+            }
+
+            if (parsed_denominator == 0) {
+                throw RationalNumberException("Zero denominator!");
+            }
+        } else {
+            parsed_denominator = 1;
         }
 
         _numerator = parsed_numerator;
