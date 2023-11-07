@@ -19,7 +19,7 @@ int main()
         for (int j = 0; j < n; ++j) {
             BoltzmannTemperature temperature;
             temperature.set(1000000);
-            Schedule schedule(std::to_string(i) + ".txt");
+            Schedule schedule("input/" + std::to_string(i) + ".csv");
             Mutation mutation;
             Annealing<Schedule, Mutation, BoltzmannTemperature> algo(schedule, mutation, temperature);
             auto start = std::chrono::high_resolution_clock::now();

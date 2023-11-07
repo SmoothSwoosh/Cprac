@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     int i = 0;
     for (auto proc_num : proc_nums) {
         for (auto task_num : task_nums) {
-            std::ofstream file(std::to_string(i) + ".txt");
+            std::ofstream file("input/" + std::to_string(i) + ".csv");
             file << proc_num << "\n";
             file << task_num << "\n";
 
