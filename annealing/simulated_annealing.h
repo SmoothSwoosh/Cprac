@@ -85,7 +85,7 @@ ScheduleT ParallelAnnealing(long long Nproc, ScheduleT initial_schedule, Mutatio
             threads[i].join();
         }
 
-        if (initial_schedule.get_quality() - parallel_best_schedule.get_quality() < 0) {
+        if (initial_schedule.get_quality() - parallel_best_schedule.get_quality() > 0) {
             // parallel schedule is better than initial one
             // change initial schedule to parallel schedule
             initial_schedule = parallel_best_schedule;
