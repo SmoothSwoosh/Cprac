@@ -44,60 +44,58 @@ public:
         }
     }
 
-    // void parallel_start(ScheduleT& parallel_best_schedule, std::mutex& mutex) {
-    //     start();
-    //     mutex.lock();
-    //     if (parallel_best_schedule.get_quality() - _best_schedule.get_quality() > 0) {
-    //         parallel_best_schedule = _best_schedule;
-    //     }
-    //     mutex.unlock();
-    // }
+    void parallel_start(ScheduleT& parallel_best_schedule, std::mutex& mutex) {
+         start();
+         mutex.lock();
+         if (parallel_best_schedule.get_quality() - _best_schedule.get_quality() > 0) {
+             parallel_best_schedule = _best_schedule;
+         }
+         mutex.unlock();
+    }
 
     ScheduleT get_best_schedule() const {
         return _best_schedule;
     }
 };
 
-// template<typename ScheduleT, typename MutationT, typename TemperatureT>
-// ScheduleT ParallelAnnealing(long long Nproc, ScheduleT initial_schedule, MutationT mutation, 
-//                             TemperatureT temperature, long long parallel_limit = 10) {
-//     std::mutex mutex;
-//     ScheduleT parallel_best_schedule = initial_schedule;
-//     long long iteration = 0;
-//     long long best_iteration = 0;
+template<typename ScheduleT, typename MutationT, typename TemperatureT>
+ScheduleT ParallelAnnealing(long long Nproc, ScheduleT initial_schedule, MutationT mutation, 
+                            TemperatureT temperature, long long parallel_limit = 10) {
+    std::mutex mutex;
+    ScheduleT parallel_best_schedule = initial_schedule;
+    long long iteration = 0;
+    long long best_iteration = 0;
 
-//     while (iteration - best_iteration <= parallel_limit) {
-//         std::vector<Annealing<ScheduleT, MutationT, TemperatureT>> models;
-//         std::vector<std::thread> threads;
+    while (iteration - best_iteration <= parallel_limit) {
+        std::vector<Annealing<ScheduleT, MutationT, TemperatureT>> models;
+        std::vector<std::thread> threads;
 
-//         for (long long i = 0; i < Nproc; ++i) {
-//             models.push_back(Annealing<ScheduleT, MutationT, TemperatureT>(initial_schedule, mutation, temperature));
-//         }
+        for (long long i = 0; i < Nproc; ++i) {
+            models.push_back(Annealing<ScheduleT, MutationT, TemperatureT>(initial_schedule, mutation, temperature));
+        }
 
-//         void thread_perform(std::mutex& mutex, std::vector<Annealing<ScheduleT, MutationT, TemperatureT>>& models,
-//                             ScheduleT& parallel_best_schedule, int idx) 
-//         {
-//             models[idx].parallel_start(parallel_best_schedule, mutex);
-//         };
+        for (long long i = 0; i < Nproc; ++i) {
+            auto thread_perform = [&mutex, &models, &parallel_best_schedule, i] {
+				models[i].parallel_start(parallel_best_schedule, mutex);
+			};
+            threads.push_back(std::thread{thread_perform});
+        }
 
-//         for (long long i = 0; i < Nproc; ++i) {
-//             std::thread thrd{thread_perform};
-//             threads.push_back(thrd);
-//         }
+        for (long long i = 0; i < Nproc; ++i) {
+            threads[i].join();
+        }
 
-//         for (long long i = 0; i < Nproc; ++i) {
-//             threads[i].join();
-//         }
+        if (initial_schedule.get_quality() - parallel_best_schedule.get_quality() > 0) {
+            // parallel schedule is better than initial one
+            // change initial schedule to parallel schedule
+            initial_schedule = parallel_best_schedule;
+            best_iteration = iteration;
+        }
 
-//         if (initial_schedule.get_quality() - parallel_best_schedule.get_quality() < 0) {
-//             // parallel schedule is better than initial one
-//             // change initial schedule to parallel schedule
-//             initial_schedule = parallel_best_schedule;
-//             best_iteration = iteration;
-//         }
-
-//         ++iteration;
-//     }
-// }
+        ++iteration;
+    }
+    
+    return parallel_best_schedule;
+}
 
 #endif
