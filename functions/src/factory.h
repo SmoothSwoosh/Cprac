@@ -2,7 +2,6 @@
 #define FACTORY_H
 
 #include "functions.h"
-#include <stdexcept>
 
 class TFunctionFactory {
 public:

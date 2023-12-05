@@ -2,6 +2,7 @@
 #define FUNCTIONS_H
 
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <cmath>
@@ -183,7 +184,7 @@ public:
         return _left->GetDeriv(x) * (*_right)(x) + (*_left)(x) * _right->GetDeriv(x);
     }
     std::string ToString() const override {
-        return "(" + _left->ToString() + " * " + _right->ToString() + ")";
+        return "(" + _left->ToString() + ") * (" + _right->ToString() + ")";
     }
     std::shared_ptr<TFunction> MakePtr() const override {
         return std::make_shared<MultiplyFunction>(*_left, *_right);
@@ -205,7 +206,7 @@ public:
                / ((*_right)(x) * (*_right)(x));
     }
     std::string ToString() const override {
-        return "(" + _left->ToString() + " / " + _right->ToString() + ")";
+        return "(" + _left->ToString() + ") / (" + _right->ToString() + ")";
     }
     std::shared_ptr<TFunction> MakePtr() const override {
         return std::make_shared<DivideFunction>(*_left, *_right);
@@ -216,32 +217,36 @@ template<typename Derived>
 AddFunction operator+(const TFunction& left, const Derived& right) {
     if constexpr (!std::is_base_of_v<TFunction, Derived>) {
         throw std::logic_error("Different types of operands!");
-    }
-    return AddFunction(left, right);
+    } else {
+		return AddFunction(left, right);
+	}
 }
 
 template<typename Derived>
 SubtractFunction operator-(const TFunction& left, const Derived& right) {
     if constexpr (!std::is_base_of_v<TFunction, Derived>) {
         throw std::logic_error("Different types of operands!");
-    }
-    return SubtractFunction(left, right);
+    } else {
+		return SubtractFunction(left, right);
+	}
 }
 
 template<typename Derived>
 MultiplyFunction operator*(const TFunction& left, const Derived& right) {
     if constexpr (!std::is_base_of_v<TFunction, Derived>) {
         throw std::logic_error("Different types of operands!");
-    }
-    return MultiplyFunction(left, right);
+    } else {
+		return MultiplyFunction(left, right);
+	}
 }
 
 template<typename Derived>
 DivideFunction operator/(const TFunction& left, const Derived& right) {
     if constexpr (!std::is_base_of_v<TFunction, Derived>) {
         throw std::logic_error("Different types of operands!");
-    }
-    return DivideFunction(left, right);
+    } else {
+		return DivideFunction(left, right);
+	}
 }
 
 #endif
